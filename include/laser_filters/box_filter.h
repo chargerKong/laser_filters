@@ -129,12 +129,13 @@ class LaserScanBoxFilter : public filters::FilterBase<sensor_msgs::msg::LaserSca
       sensor_msgs::msg::PointCloud2 laser_cloud;
 
       std::string error_msg;
-
+      rclcpp::Time begin_point = rclcpp::Time(input_scan.header.stamp) +\
+           std::chrono::duration<double>(input_scan.ranges.size() * input_scan.time_increment);
       bool success = buffer_.canTransform(
           box_frame_,
-          input_scan.header.frame_id,
-          rclcpp::Time(input_scan.header.stamp) + std::chrono::duration<double>(input_scan.ranges.size() * input_scan.time_increment),
-          1.0s,
+          std::string(input_scan.header.frame_id),
+          tf2::TimePoint(std::chrono::nanoseconds(begin_point.nanoseconds())),
+          std::chrono::seconds(1),
           &error_msg);
       if (!success)
       {
@@ -142,7 +143,7 @@ class LaserScanBoxFilter : public filters::FilterBase<sensor_msgs::msg::LaserSca
         return false;
       }
 
-      rclcpp::Clock steady_clock(RCL_STEADY_TIME);
+      // rclcpp::Clock steady_clock(RCL_STEADY_TIME);
       try
       {
         projector_.transformLaserScanToPointCloud(box_frame_, input_scan, laser_cloud, buffer_);
@@ -151,12 +152,12 @@ class LaserScanBoxFilter : public filters::FilterBase<sensor_msgs::msg::LaserSca
       {
         if (up_and_running_)
         {
-          RCLCPP_WARN_THROTTLE(get_logger(), steady_clock, 1, "Dropping Scan: Tansform unavailable %s", ex.what());
+          RCLCPP_WARN(get_logger(), "Dropping Scan: Tansform unavailable %s", ex.what());
           return true;
         }
         else
         {
-          RCLCPP_INFO_THROTTLE(get_logger(), steady_clock, .3, "Ignoring Scan: Waiting for TF");
+          RCLCPP_INFO(get_logger(), "Ignoring Scan: Waiting for TF");
         }
         return false;
       }
@@ -172,7 +173,7 @@ class LaserScanBoxFilter : public filters::FilterBase<sensor_msgs::msg::LaserSca
         !(iter_y != iter_y.end()) || 
         !(iter_z != iter_z.end()))
       {
-        RCLCPP_INFO_THROTTLE(get_logger(), steady_clock, .3, "x, y, z and index fields are required, skipping scan");
+        RCLCPP_INFO(get_logger(), "x, y, z and index fields are required, skipping scan");
       }
 
     for (;

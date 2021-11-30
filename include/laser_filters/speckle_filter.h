@@ -176,7 +176,7 @@ public:
   bool configure(){
     node_ = std::make_shared<rclcpp::Node>(getName());
     // dynamic reconfigure parameters callback:
-    on_set_parameters_callback_handle_ = node_->add_on_set_parameters_callback(
+    auto on_set_parameters_callback_handle_ = node_->set_on_parameters_set_callback(
             std::bind(&LaserScanSpeckleFilter::reconfigureCB, this, std::placeholders::_1));
 
     // get params
@@ -263,7 +263,7 @@ private:
   double max_range_difference = 0;
   int filter_window = 0;
   rclcpp::Node::SharedPtr node_;
-  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr on_set_parameters_callback_handle_;
+  // rclcpp::node_interfaces::OnParametersSetCallbackType::SharedPtr on_set_parameters_callback_handle_;
 
   rcl_interfaces::msg::SetParametersResult reconfigureCB(std::vector<rclcpp::Parameter> parameters)
   {
@@ -272,7 +272,7 @@ private:
 
       for (auto parameter : parameters)
       {
-        RCLCPP_INFO_STREAM(node_->get_logger(), "Update parameter " << parameter.get_name().c_str()<< " to "<<parameter);
+        RCLCPP_INFO(node_->get_logger(), "Update parameter %s to %s", parameter.get_name().c_str(), parameter);
         if(parameter.get_name() == "filter_type"&& parameter.get_type() == rclcpp::ParameterType::PARAMETER_INTEGER)
             filter_type = parameter.as_int();
         else if(parameter.get_name() == "max_range" && parameter.get_type() == rclcpp::ParameterType::PARAMETER_DOUBLE)

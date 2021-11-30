@@ -91,11 +91,11 @@ public:
       rclcpp::Clock steady_clock(RCL_STEADY_TIME);
       if (up_and_running_)
       {
-        RCLCPP_WARN_THROTTLE(get_logger(), steady_clock, 1, "Dropping Scan: Transform unavailable %s", ex.what());
+        RCLCPP_WARN(get_logger(), "Dropping Scan: Transform unavailable %s", ex.what());
       }
       else
       {
-        RCLCPP_INFO_THROTTLE(get_logger(), steady_clock, .3, "Ignoring Scan: Waiting for TF");
+        RCLCPP_INFO(get_logger(), "Ignoring Scan: Waiting for TF");
       }
       return false;
     }
